@@ -1,12 +1,157 @@
- <!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My GitHub Pages Test</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Tablas Rápidas</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABg3Am1AAAAO0lEQVRo3u3OMQEAAAgDINc/9K3hC6YQB3a7AZ3dA0AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgFOqA6lTAABjPQ+iAAAAAElFTkSuQmCC">
+  <style>
+    html, body {
+      height: -webkit-fill-available;
+    }
+    @media (max-width: 375px) {
+      h1 { font-size: 1.4rem; }
+      #problem { font-size: 2rem; }
+      input, button { font-size: 1rem; padding: 0.6rem; }
+      #feedback { font-size: 1rem; }
+    }
+  </style>
 </head>
-<body>
-    <h1>Hello from GitHub Pages! 🚀</h1>
-    <p>If you can see this, your site is working.</p>
+<body class="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-amber-50 flex items-center justify-center p-4">
+  <main class="w-full max-w-md">
+    <section id="game-section" class="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg p-4">
+      <header class="flex items-center justify-between">
+        <h1 class="font-extrabold text-indigo-700">Tablas Rápidas</h1>
+        <div class="text-right">
+          <div class="text-xs text-slate-500">Puntuación</div>
+          <div id="total-score" class="text-lg font-semibold text-emerald-600">0</div>
+        </div>
+      </header>
+
+      <div class="mt-3 flex justify-between text-sm text-slate-500">
+        <div>Tiempo: <span id="timer" class="font-bold text-indigo-600">10</span>s</div>
+        <div>Puntos: <span id="current-points" class="font-bold text-amber-600">1000</span></div>
+      </div>
+
+      <div class="mt-4 text-center text-3xl font-bold text-indigo-700" id="problem">
+        <span id="a">3</span> × <span id="b">7</span> = ?
+      </div>
+
+      <form id="answer-form" class="mt-4 flex gap-2">
+        <input id="answer" type="number" autocomplete="off"
+               class="flex-1 rounded-lg border border-indigo-200 focus:ring-2 focus:ring-indigo-300 px-3 py-2 text-lg"
+               placeholder="Respuesta" required />
+        <button id="check-btn" type="submit"
+                class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-lg">✔</button>
+      </form>
+
+      <div id="feedback" class="mt-3 text-center font-semibold"></div>
+      <div class="mt-2 text-center text-xs text-slate-500">Pregunta <span id="question-number">1</span> / 10</div>
+    </section>
+
+    <section id="final-section" class="hidden bg-white/90 backdrop-blur-sm rounded-xl shadow-lg p-6 text-center">
+      <h2 class="text-2xl font-extrabold text-indigo-700 mb-2">¡Fin del juego!</h2>
+      <p class="text-slate-700 mb-4">Has completado 10 multiplicaciones</p>
+      <div class="text-5xl font-bold text-emerald-600 mb-4" id="final-score">0</div>
+      <button id="restart-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg">Reiniciar</button>
+    </section>
+  </main>
+
+  <script>
+    const aEl = document.getElementById('a');
+    const bEl = document.getElementById('b');
+    const answerInput = document.getElementById('answer');
+    const form = document.getElementById('answer-form');
+    const feedback = document.getElementById('feedback');
+    const checkBtn = document.getElementById('check-btn');
+    const timerEl = document.getElementById('timer');
+    const currentPointsEl = document.getElementById('current-points');
+    const totalScoreEl = document.getElementById('total-score');
+    const questionNumberEl = document.getElementById('question-number');
+    const gameSection = document.getElementById('game-section');
+    const finalSection = document.getElementById('final-section');
+    const finalScoreEl = document.getElementById('final-score');
+    const restartBtn = document.getElementById('restart-btn');
+
+    let a, b;
+    let totalScore = 0;
+    let currentPoints = 1000;
+    let timer = 10;
+    let timerInterval;
+    let questionsDone = 0;
+
+    function rand1to10() { return Math.floor(Math.random() * 10) + 1; }
+
+    function startTimer() {
+      clearInterval(timerInterval);
+      timer = 10; currentPoints = 1000;
+      timerEl.textContent = timer.toFixed(1);
+      currentPointsEl.textContent = currentPoints;
+      timerInterval = setInterval(() => {
+        timer -= 0.1;
+        if (timer < 0) timer = 0;
+        currentPoints = Math.max(0, Math.floor(1000 * (timer / 10)));
+        timerEl.textContent = timer.toFixed(1);
+        currentPointsEl.textContent = currentPoints;
+        if (timer <= 0) { clearInterval(timerInterval); checkAnswer(); }
+      }, 100);
+    }
+
+    function newProblem() {
+      a = rand1to10(); b = rand1to10();
+      aEl.textContent = a; bEl.textContent = b;
+      feedback.textContent = '';
+      answerInput.value = '';
+      answerInput.disabled = false;
+      checkBtn.disabled = false;
+      startTimer();
+      answerInput.focus();
+    }
+
+    function checkAnswer() {
+      clearInterval(timerInterval);
+      answerInput.disabled = true;
+      checkBtn.disabled = true;
+      const expected = a * b;
+      const user = Number(answerInput.value.trim());
+      let correct = user === expected;
+      if (correct) {
+        totalScore += currentPoints;
+        feedback.className = "mt-3 text-center font-semibold text-emerald-600";
+        feedback.textContent = `✓ Correcto (+${currentPoints} pts)`;
+      } else {
+        feedback.className = "mt-3 text-center font-semibold text-rose-600";
+        feedback.textContent = `✕ Incorrecto. Era ${expected}`;
+      }
+      totalScoreEl.textContent = totalScore;
+      questionsDone++;
+      questionNumberEl.textContent = questionsDone;
+      setTimeout(() => {
+        if (questionsDone >= 10) showFinalScore();
+        else newProblem();
+      }, 3000);
+    }
+
+    function showFinalScore() {
+      gameSection.classList.add('hidden');
+      finalSection.classList.remove('hidden');
+      finalScoreEl.textContent = totalScore;
+    }
+
+    form.addEventListener('submit', e => { e.preventDefault(); checkAnswer(); });
+    restartBtn.addEventListener('click', () => {
+      totalScore = 0; questionsDone = 0;
+      totalScoreEl.textContent = totalScore;
+      questionNumberEl.textContent = 1;
+      finalSection.classList.add('hidden');
+      gameSection.classList.remove('hidden');
+      newProblem();
+    });
+
+    newProblem();
+  </script>
 </body>
 </html>
