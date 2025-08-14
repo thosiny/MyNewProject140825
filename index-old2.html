@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Tablas Rápidas</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <style>
+    html, body {
+      height: -webkit-fill-available;
+    }
+    @media (max-width: 375px) {
+      h1 { font-size: 1.4rem; }
+      #problem { font-size: 2rem; }
+      input, button { font-size: 1rem; padding: 0.6rem; }
+      #feedback { font-size: 1rem; }
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-pink-100 via-white to-amber-100 flex items-center justify-center p-4">
+
+  <main class="w-full max-w-md">
+    <!-- Pantalla del juego -->
+    <section id="game-section" class="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg p-4 hidden">
+      <header class="flex items-center justify-between">
+        <h1 class="font-extrabold text-pink-700">Tablas Rápidas</h1>
+        <div class="text-right">
+          <div class="text-xs text-slate-500">Puntuación</div>
+          <div id="total-score" class="text-lg font-semibold text-emerald-600">0</div>
+        </div>
+      </header>
+
+      <div class="mt-3 flex justify-between text-sm text-slate-500">
+        <div>Tiempo: <span id="timer" class="font-bold text-pink-600">10.0</span>s</div>
+        <div>Puntos: <span id="current-points" class="font-bold text-amber-600">1000</span></div>
+      </div>
+
+      <div class="mt-4 text-center text-3xl font-bold text-pink-700" id="problem">
+        <span id="a">3</span> × <span id="b">7</span> = ?
+      </div>
+
+      <form id="answer-form" class="mt-4 flex gap-2">
+        <input id="answer" type="number" autocomplete="off"
+               class="flex-1 rounded-lg border border-pink-200 focus:ring-2 focus:ring-pink-300 px-3 py-2 text-lg"
+               placeholder="Respuesta" required />
+        <button id="check-btn" type="submit"
+                class="bg-pink-600 hover:bg-pink-700 text-white px-3 py-2 rounded-lg">✔</button>
+      </form>
+
+      <div id="feedback" class="mt-3 text-center font-semibold"></div>
+      <div class="mt-2 text-center text-xs text-slate-500">Pregunta <span id="question-number">1</span> / 10</div>
+    </section>
+
+    <!-- Pantalla final -->
+    <section id="final-section" class="hidden bg-white/90 backdrop-blur-sm rounded-xl shadow-lg p-6 text-center">
+      <h2 class="text-2xl font-extrabold text-pink-700 mb-2">¡Fin del juego!</h2>
+      <p class="text-slate-700 mb-4" id="final-message"></p>
+      <div class="text-5xl font-bold text-emerald-600 mb-4" id="final-score">0</div>
+      <h3 class="text-xl font-bold text-pink-600 mb-2">Ranking</h3>
+      <table class="w-full text-left border-collapse mb-4">
+        <thead>
+          <tr class="bg-pink-100">
+            <th class="p-2">Pos</th>
+            <th class="p-2">Jugador</th>
+            <th class="p-2">Puntos</th>
+          </tr>
+        </thead>
+        <tbody id="ranking-table" class="text-slate-700"></tbody>
+      </table>
+      <button id="restart-btn" class="bg-pink-600 hover:bg-pink-700 text-white px-4 py-2 rounded-lg">Reiniciar</button>
+    </section>
+  </main>
+
+  <script>
+    const aEl = document.getElementById('a');
+    const bEl = document.getElementById('b');
+    const answerInput = document.getElementById('answer');
+    const form = document.getElementById('answer-form');
+    const feedback = document.getElementById('feedback');
+    const checkBtn = document.getElementById('check-btn');
+    const timerEl = document.getElementById('timer');
+    const currentPointsEl = document.getElementById('current-points');
+    const totalScoreEl = document.getElementById('total-score');
+    const questionNumberEl = document.getElementById('question-number');
+    const gameSection = document.getElementById('game-section');
+    const finalSection = document.getElementById('final-section');
+    const finalScoreEl = document.getElementById('final-score');
+    const finalMessageEl = document.getElementById('final-message');
+    const rankingTable = document.getElementById('ranking-table');
+    const restartBtn = document.getElementById('restart-btn');
+
+    let a, b;
+    let totalScore = 0;
+    let currentPoints = 1000;
+    let timer = 10;
+    let timerInterval;
+    let questionsDone = 0;
+    let playerName = '';
+
+    function rand1to10() { return Math.floor(Math.random() * 10) + 1; }
+
+    function startTimer() {
+      clearInterval(timerInterval);
+      timer = 10; currentPoints = 1000;
+      timerEl.textContent = timer.toFixed(1);
+      currentPointsEl.textContent = currentPoints;
+      timerInterval = setInterval(() => {
+        timer -= 0.1;
+        if (timer < 0) timer = 0;
+        currentPoints = Math.max(0, Math.floor(1000 * (timer / 10)));
+        timerEl.textContent = timer.toFixed(1);
+        currentPointsEl.textContent = currentPoints;
+        if (timer <= 0) { clearInterval(timerInterval); checkAnswer(); }
+      }, 100);
+    }
+
+    function newProblem() {
+      a = rand1to10(); b = rand1to10();
+      aEl.textContent = a; bEl.textContent = b;
+      feedback.textContent = '';
+      answerInput.value = '';
+      answerInput.disabled = false;
+      checkBtn.disabled = false;
+      startTimer();
+      answerInput.focus();
+    }
+
+    function checkAnswer() {
+      clearInterval(timerInterval);
+      answerInput.disabled = true;
+      checkBtn.disabled = true;
+      const expected = a * b;
+      const user = Number(answerInput.value.trim());
+      let correct = user === expected;
+      if (correct) {
+        totalScore += currentPoints;
+        feedback.className = "mt-3 text-center font-semibold text-emerald-600";
+        feedback.textContent = `✓ Correcto (+${currentPoints} pts)`;
+      } else {
+        feedback.className = "mt-3 text-center font-semibold text-rose-600";
+        feedback.textContent = `✕ Incorrecto. Era ${expected}`;
+      }
+      totalScoreEl.textContent = totalScore;
+      questionsDone++;
+      questionNumberEl.textContent = questionsDone;
+      setTimeout(() => {
+        if (questionsDone >= 10) showFinalScore();
+        else newProblem();
+      }, 3000);
+    }
+
+    function getRanking() {
+      return JSON.parse(localStorage.getItem('ranking') || '[]');
+    }
+
+    function saveRanking(ranking) {
+      localStorage.setItem('ranking', JSON.stringify(ranking));
+    }
+
+    function updateRanking(name, score) {
+      let ranking = getRanking();
+      let existing = ranking.find(p => p.name === name);
+      if (existing) {
+        if (score > existing.score) existing.score = score;
+      } else {
+        ranking.push({ name, score });
+      }
+      ranking.sort((a, b) => b.score - a.score);
+      if (ranking.length > 10) ranking = ranking.slice(0, 10);
+      saveRanking(ranking);
+      return ranking.findIndex(p => p.name === name) + 1;
+    }
+
+    function showRankingTable() {
+      const ranking = getRanking();
+      rankingTable.innerHTML = ranking.map((p, i) =>
+        `<tr class="${i % 2 === 0 ? 'bg-white' : 'bg-pink-50'}">
+          <td class="p-2">${i + 1}</td>
+          <td class="p-2">${p.name}</td>
+          <td class="p-2">${p.score}</td>
+        </tr>`
+      ).join('');
+    }
+
+    function showFinalScore() {
+      gameSection.classList.add('hidden');
+      finalSection.classList.remove('hidden');
+      finalScoreEl.textContent = totalScore;
+      const position = updateRanking(playerName, totalScore);
+      finalMessageEl.textContent = `¡${playerName}, estás en el puesto #${position} del ranking!`;
+      showRankingTable();
+    }
+
+    form.addEventListener('submit', e => { e.preventDefault(); checkAnswer(); });
+    restartBtn.addEventListener('click', () => {
+      totalScore = 0; questionsDone = 0;
+      totalScoreEl.textContent = totalScore;
+      questionNumberEl.textContent = 1;
+      finalSection.classList.add('hidden');
+      gameSection.classList.remove('hidden');
+      newProblem();
+    });
+
+    // Inicio del juego
+    window.addEventListener('load', () => {
+      playerName = prompt("Introduce tu nombre:");
+      if (!playerName) playerName = "Jugador";
+      gameSection.classList.remove('hidden');
+      newProblem();
+    });
+  </script>
+</body>
+</html>
