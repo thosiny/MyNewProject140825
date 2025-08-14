@@ -1,154 +1,143 @@
 <!doctype html>
 <html lang="es">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-<title>Tablas Rápidas</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<style>
-  html, body { height: -webkit-fill-available; }
-  @media (max-width: 375px) {
-    h1 { font-size: 1.4rem; }
-    #problem { font-size: 2rem; }
-    input, button, select { font-size: 1rem; padding: 0.6rem; }
-    #feedback { font-size: 1rem; }
-  }
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Tablas Rápidas</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <style>
+    @media (max-width: 375px) {
+      h1 { font-size: 1.4rem; }
+      #problem { font-size: 2rem; }
+      input, button { font-size: 1rem; padding: 0.6rem; }
+      #feedback { font-size: 1rem; }
+    }
+  </style>
 </head>
-<body class="min-h-screen bg-gradient-to-br from-pink-50 via-white to-purple-50 flex items-center justify-center p-4">
+<body class="min-h-screen bg-gradient-to-br from-pink-100 via-white to-rose-100 flex items-center justify-center p-4">
 
 <main class="w-full max-w-md">
+
   <!-- Pantalla de inicio -->
-  <section id="start-section" class="bg-white/80 rounded-xl shadow-lg p-4 text-center">
-    <h1 class="font-extrabold text-pink-600 mb-4">🎀 Tablas Rápidas 🎀</h1>
-    <p class="mb-3">Introduce tu nombre y elige un icono:</p>
-    <input id="player-name" type="text" placeholder="Tu nombre"
-           class="w-full rounded-lg border border-pink-200 px-3 py-2 mb-3" required>
-    <select id="player-emoji" class="w-full rounded-lg border border-pink-200 px-3 py-2 mb-3">
-      <option>🐱</option><option>🦄</option><option>🐶</option>
-      <option>🐰</option><option>🐼</option><option>🦋</option>
-      <option>🐸</option><option>🐯</option><option>🐹</option>
-      <option>🦊</option>
-    </select>
-    <button id="start-btn" class="bg-pink-500 hover:bg-pink-600 text-white px-4 py-2 rounded-lg">Empezar</button>
+  <section id="start-section" class="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg p-6 text-center">
+    <h1 class="font-extrabold text-pink-700 text-2xl mb-4">🎀 Tablas Rápidas</h1>
+    <p class="mb-3 text-slate-600">Introduce tu nombre y elige un icono</p>
+    <input id="player-name" type="text" maxlength="15" class="w-full rounded-lg border border-pink-300 px-3 py-2 mb-3" placeholder="Tu nombre" required>
+    <div id="icon-choices" class="flex flex-wrap justify-center gap-2 mb-4"></div>
+    <button id="start-btn" class="bg-pink-500 hover:bg-pink-600 text-white px-4 py-2 rounded-lg">Comenzar</button>
   </section>
 
   <!-- Juego -->
-  <section id="game-section" class="hidden bg-white/80 rounded-xl shadow-lg p-4">
+  <section id="game-section" class="hidden bg-white/80 backdrop-blur-sm rounded-xl shadow-lg p-4">
     <header class="flex items-center justify-between">
-      <h1 class="font-extrabold text-pink-600">Tablas Rápidas</h1>
+      <h1 class="font-extrabold text-pink-700">Tablas Rápidas</h1>
       <div class="text-right">
         <div class="text-xs text-slate-500">Puntuación</div>
         <div id="total-score" class="text-lg font-semibold text-emerald-600">0</div>
       </div>
     </header>
-
     <div class="mt-3 flex justify-between text-sm text-slate-500">
-      <div>Tiempo: <span id="timer" class="font-bold text-pink-600">10</span>s</div>
+      <div>Tiempo: <span id="timer" class="font-bold text-pink-600">10.0</span>s</div>
       <div>Puntos: <span id="current-points" class="font-bold text-amber-600">1000</span></div>
     </div>
-
-    <div class="mt-4 text-center text-3xl font-bold text-pink-700" id="problem">
-      <span id="a">3</span> × <span id="b">7</span> = ?
-    </div>
-
+    <div class="mt-4 text-center text-3xl font-bold text-pink-700" id="problem"></div>
     <form id="answer-form" class="mt-4 flex gap-2">
       <input id="answer" type="number" autocomplete="off"
              class="flex-1 rounded-lg border border-pink-200 focus:ring-2 focus:ring-pink-300 px-3 py-2 text-lg"
              placeholder="Respuesta" required />
-      <button id="check-btn" type="submit"
-              class="bg-pink-500 hover:bg-pink-600 text-white px-3 py-2 rounded-lg">✔</button>
+      <button type="submit" class="bg-pink-500 hover:bg-pink-600 text-white px-3 py-2 rounded-lg">✔</button>
     </form>
-
     <div id="feedback" class="mt-3 text-center font-semibold"></div>
     <div class="mt-2 text-center text-xs text-slate-500">Pregunta <span id="question-number">1</span> / 10</div>
   </section>
 
-  <!-- Pantalla final -->
-  <section id="final-section" class="hidden bg-white/90 rounded-xl shadow-lg p-6 text-center">
-    <h2 class="text-2xl font-extrabold text-pink-600 mb-2">¡Fin del juego!</h2>
+  <!-- Final -->
+  <section id="final-section" class="hidden bg-white/90 backdrop-blur-sm rounded-xl shadow-lg p-6 text-center">
+    <h2 class="text-2xl font-extrabold text-pink-700 mb-2">🏆 ¡Fin del juego!</h2>
     <p class="text-slate-700 mb-4">Has completado 10 multiplicaciones</p>
     <div class="text-5xl font-bold text-emerald-600 mb-4" id="final-score">0</div>
-    <p id="ranking-position" class="mb-4 font-semibold"></p>
-    <h3 class="text-lg font-bold mb-2">🏆 Ranking</h3>
-    <ul id="ranking-list" class="mb-4 text-left"></ul>
-    <div class="flex gap-2 justify-center">
+    <p id="player-rank" class="mb-4 text-pink-600 font-semibold"></p>
+    <div class="flex justify-center gap-2">
       <button id="restart-btn" class="bg-pink-500 hover:bg-pink-600 text-white px-4 py-2 rounded-lg">Reiniciar</button>
-      <button id="new-player-btn" class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg">Nuevo jugador</button>
-      <button id="reset-ranking-btn" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg">Reset Ranking</button>
+      <button id="new-player-btn" class="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg">Nuevo jugador</button>
     </div>
   </section>
+
+  <!-- Ranking -->
+  <section id="ranking-section" class="mt-6 bg-white/80 backdrop-blur-sm rounded-xl shadow-lg p-4">
+    <h3 class="font-bold text-pink-700 mb-3">🏆 Ranking</h3>
+    <ul id="ranking-list" class="space-y-1 text-sm"></ul>
+    <button id="reset-ranking-btn" class="mt-3 text-xs text-rose-500 underline">Reset Ranking (Admin)</button>
+  </section>
+
 </main>
 
 <script>
+const emojis = ["🦄","🐱","🌸","🐶","🦋","🍓","🎀","🐼","🌈","🏆"];
+let chosenEmoji = null;
+let playerName = "";
+let a, b, totalScore = 0, currentPoints = 1000, timer = 10, timerInterval, questionsDone = 0;
+
 const startSection = document.getElementById('start-section');
 const gameSection = document.getElementById('game-section');
 const finalSection = document.getElementById('final-section');
-const startBtn = document.getElementById('start-btn');
-const playerNameInput = document.getElementById('player-name');
-const playerEmojiSelect = document.getElementById('player-emoji');
-const answerInput = document.getElementById('answer');
-const form = document.getElementById('answer-form');
-const feedback = document.getElementById('feedback');
-const timerEl = document.getElementById('timer');
-const currentPointsEl = document.getElementById('current-points');
-const totalScoreEl = document.getElementById('total-score');
-const questionNumberEl = document.getElementById('question-number');
-const finalScoreEl = document.getElementById('final-score');
-const rankingPositionEl = document.getElementById('ranking-position');
-const rankingListEl = document.getElementById('ranking-list');
-const restartBtn = document.getElementById('restart-btn');
-const newPlayerBtn = document.getElementById('new-player-btn');
-const resetRankingBtn = document.getElementById('reset-ranking-btn');
-
-let playerName = "";
-let selectedEmoji = "";
-let a, b;
-let totalScore = 0;
-let currentPoints = 1000;
-let timer = 10;
-let timerInterval;
-let questionsDone = 0;
+const rankingList = document.getElementById('ranking-list');
 
 function rand1to10() { return Math.floor(Math.random() * 10) + 1; }
+
+function renderIcons(){
+  const container = document.getElementById('icon-choices');
+  container.innerHTML = "";
+  emojis.forEach(emoji=>{
+    const btn = document.createElement('button');
+    btn.textContent = emoji;
+    btn.className = "text-2xl p-2 rounded-lg border border-pink-300 hover:bg-pink-100";
+    btn.onclick = (e)=>{
+      e.preventDefault();
+      chosenEmoji = emoji;
+      [...container.children].forEach(c=>c.classList.remove('bg-pink-200'));
+      btn.classList.add('bg-pink-200');
+    }
+    container.appendChild(btn);
+  });
+}
 
 function startTimer() {
   clearInterval(timerInterval);
   timer = 10; currentPoints = 1000;
-  timerEl.textContent = timer.toFixed(1);
-  currentPointsEl.textContent = currentPoints;
+  document.getElementById('timer').textContent = timer.toFixed(1);
+  document.getElementById('current-points').textContent = currentPoints;
   timerInterval = setInterval(() => {
     timer -= 0.1;
     if (timer < 0) timer = 0;
     currentPoints = Math.max(0, Math.floor(1000 * (timer / 10)));
-    timerEl.textContent = timer.toFixed(1);
-    currentPointsEl.textContent = currentPoints;
+    document.getElementById('timer').textContent = timer.toFixed(1);
+    document.getElementById('current-points').textContent = currentPoints;
     if (timer <= 0) { clearInterval(timerInterval); checkAnswer(); }
   }, 100);
 }
 
 function newProblem() {
   a = rand1to10(); b = rand1to10();
-  document.getElementById('a').textContent = a;
-  document.getElementById('b').textContent = b;
-  feedback.textContent = '';
-  answerInput.value = '';
-  answerInput.disabled = false;
-  document.getElementById('check-btn').disabled = false;
+  document.getElementById('problem').textContent = `${a} × ${b} = ?`;
+  document.getElementById('feedback').textContent = '';
+  document.getElementById('answer').value = '';
+  document.getElementById('answer').disabled = false;
+  document.querySelector('#answer-form button').disabled = false;
   startTimer();
-  answerInput.focus();
 }
 
 function checkAnswer() {
   clearInterval(timerInterval);
-  answerInput.disabled = true;
-  document.getElementById('check-btn').disabled = true;
+  document.getElementById('answer').disabled = true;
+  document.querySelector('#answer-form button').disabled = true;
   const expected = a * b;
-  const user = Number(answerInput.value.trim());
-  if (user === expected) {
+  const user = Number(document.getElementById('answer').value.trim());
+  let correct = user === expected;
+  if (correct) {
     totalScore += currentPoints;
     feedback.className = "mt-3 text-center font-semibold text-emerald-600";
     feedback.textContent = `✓ Correcto (+${currentPoints} pts)`;
@@ -156,77 +145,87 @@ function checkAnswer() {
     feedback.className = "mt-3 text-center font-semibold text-rose-600";
     feedback.textContent = `✕ Incorrecto. Era ${expected}`;
   }
-  totalScoreEl.textContent = totalScore;
+  document.getElementById('total-score').textContent = totalScore;
   questionsDone++;
-  questionNumberEl.textContent = questionsDone;
+  document.getElementById('question-number').textContent = questionsDone;
   setTimeout(() => {
-    if (questionsDone >= 10) endGame();
+    if (questionsDone >= 10) showFinalScore();
     else newProblem();
-  }, 2000);
+  }, 1500);
 }
 
-function endGame() {
-  gameSection.classList.add("hidden");
-  finalSection.classList.remove("hidden");
-  finalScoreEl.textContent = totalScore;
-
-  // guardar ranking
-  let ranking = JSON.parse(localStorage.getItem("ranking") || "[]");
-  ranking.push({name: playerName, emoji: selectedEmoji, score: totalScore});
-  ranking.sort((a,b) => b.score - a.score);
-  if (ranking.length > 10) ranking = ranking.slice(0,10);
-  localStorage.setItem("ranking", JSON.stringify(ranking));
-
-  const pos = ranking.findIndex(r => r.name === playerName && r.emoji === selectedEmoji && r.score === totalScore) + 1;
-  rankingPositionEl.textContent = `Tu posición en el ranking: #${pos}`;
-
-  // mostrar ranking con medallas + iconos
-  rankingListEl.innerHTML = ranking.map((r, i) => {
-    let medal = "";
-    if (i === 0) medal = "🥇 ";
-    else if (i === 1) medal = "🥈 ";
-    else if (i === 2) medal = "🥉 ";
-    return `<li>${medal}${r.emoji} ${r.name} - ${r.score} pts</li>`;
-  }).join("");
-
-  // confetti
-  confetti();
+function showFinalScore() {
+  gameSection.classList.add('hidden');
+  finalSection.classList.remove('hidden');
+  document.getElementById('final-score').textContent = totalScore;
+  saveScore();
+  confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
 }
 
-startBtn.addEventListener('click', () => {
-  playerName = playerNameInput.value.trim();
-  selectedEmoji = playerEmojiSelect.value;
-  if (!playerName) { alert("Por favor, introduce tu nombre."); return; }
+function saveScore(){
+  let ranking = JSON.parse(localStorage.getItem('ranking')||"[]");
+  ranking.push({name: playerName, emoji: chosenEmoji, score: totalScore});
+  ranking.sort((a,b)=>b.score-a.score);
+  if(ranking.length>10) ranking = ranking.slice(0,10);
+  localStorage.setItem('ranking', JSON.stringify(ranking));
+  renderRanking();
+  const rankPosition = ranking.findIndex(r=>r.name===playerName && r.score===totalScore && r.emoji===chosenEmoji)+1;
+  document.getElementById('player-rank').textContent = `Has quedado en el puesto #${rankPosition}`;
+}
+
+function renderRanking(){
+  const ranking = JSON.parse(localStorage.getItem('ranking')||"[]");
+  rankingList.innerHTML = "";
+  ranking.forEach((entry,i)=>{
+    const li = document.createElement('li');
+    li.className = "flex items-center gap-2";
+    const medal = i===0?"🥇":i===1?"🥈":i===2?"🥉":"";
+    li.innerHTML = `<span class="text-lg">${entry.emoji}</span><span>${medal}</span><span class="flex-1">${entry.name}</span><span class="font-bold text-emerald-600">${entry.score}</span>`;
+    rankingList.appendChild(li);
+  });
+}
+
+document.getElementById('start-btn').onclick = ()=>{
+  const name = document.getElementById('player-name').value.trim();
+  if(!name || !chosenEmoji){ alert("Introduce tu nombre y elige un icono"); return; }
+  playerName = name;
   totalScore = 0; questionsDone = 0;
-  totalScoreEl.textContent = totalScore;
-  questionNumberEl.textContent = 1;
+  document.getElementById('total-score').textContent = totalScore;
+  document.getElementById('question-number').textContent = 1;
   startSection.classList.add('hidden');
   gameSection.classList.remove('hidden');
   newProblem();
-});
+};
 
-form.addEventListener('submit', e => { e.preventDefault(); checkAnswer(); });
-restartBtn.addEventListener('click', () => {
+document.getElementById('answer-form').onsubmit = e=>{ e.preventDefault(); checkAnswer(); };
+
+document.getElementById('restart-btn').onclick = ()=>{
   totalScore = 0; questionsDone = 0;
-  totalScoreEl.textContent = totalScore;
-  questionNumberEl.textContent = 1;
+  document.getElementById('total-score').textContent = totalScore;
+  document.getElementById('question-number').textContent = 1;
   finalSection.classList.add('hidden');
   gameSection.classList.remove('hidden');
   newProblem();
-});
-newPlayerBtn.addEventListener('click', () => {
+};
+
+document.getElementById('new-player-btn').onclick = ()=>{
   finalSection.classList.add('hidden');
   startSection.classList.remove('hidden');
-});
-resetRankingBtn.addEventListener('click', () => {
+};
+
+document.getElementById('reset-ranking-btn').onclick = ()=>{
   const pass = prompt("Introduce la contraseña de administrador:");
-  if (pass === "admin123") {
-    localStorage.removeItem("ranking");
-    alert("Ranking reiniciado.");
+  if(pass === "admin123"){
+    localStorage.removeItem('ranking');
+    renderRanking();
+    alert("Ranking reiniciado");
   } else {
-    alert("Contraseña incorrecta.");
+    alert("Contraseña incorrecta");
   }
-});
+};
+
+renderIcons();
+renderRanking();
 </script>
 </body>
 </html>
