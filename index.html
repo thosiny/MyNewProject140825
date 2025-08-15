@@ -1,244 +1,375 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Juego de Tablas</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<style>
-  body {
-    background: linear-gradient(to bottom right, #ffe6f0, #fff0f5);
-    font-family: 'Comic Sans MS', cursive, sans-serif;
-  }
-  .avatar-option {
-    cursor: pointer;
-    font-size: 2.2rem;
-    padding: 0.4rem 0.6rem;
-    border-radius: 0.8rem;
-    transition: transform 0.15s, background-color 0.2s;
-  }
-  .avatar-option:hover {
-    transform: scale(1.15);
-    background-color: #ffd6e8;
-  }
-  .avatar-option.selected {
-    background-color: #fbb6ce;
-    transform: scale(1.2);
-  }
-  table {
-    border-collapse: collapse;
-    width: 100%;
-    max-width: 320px;
-  }
-  th, td {
-    padding: 0.4rem;
-    text-align: center;
-  }
-  th {
-    background-color: #fbcfe8;
-  }
-  .medal-cell, .avatar-cell {
-    width: 2.5rem;
-    text-align: center;
-  }
-  button {
-    transition: transform 0.1s;
-  }
-  button:active {
-    transform: scale(0.95);
-  }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Juego de Tablas</title>
+
+  <!-- Tailwind + Poppins font -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root { --pink-50: #fff0f5; }
+    body {
+      background: linear-gradient(to bottom right, #ffe6f0, var(--pink-50));
+      font-family: 'Poppins', sans-serif;
+    }
+    .avatar-option {
+      cursor: pointer;
+      font-size: 2.2rem;
+      padding: 0.4rem 0.6rem;
+      border-radius: 0.8rem;
+      transition: transform 0.15s, background-color 0.2s;
+      user-select: none;
+    }
+    .avatar-option:hover { transform: scale(1.15); background-color: #ffd6e8; }
+    .avatar-option.selected { background-color: #fbb6ce; transform: scale(1.2); }
+
+    /* Ranking table: no borders, tidy columns */
+    table { border-collapse: collapse; width: 100%; max-width: 340px; }
+    th, td { padding: 0.5rem; text-align: center; }
+    th { background-color: #fbcfe8; font-weight: 700; }
+    .medal-cell, .avatar-cell { width: 2.5rem; text-align: center; }
+    .name-cell { text-align: left; }
+
+    /* Buttons tap feedback */
+    button { transition: transform 0.08s; }
+    button:active { transform: scale(0.97); }
+  </style>
 </head>
 <body class="flex flex-col items-center justify-center min-h-screen p-2">
 
-<!-- Start Screen -->
-<div id="start-screen" class="text-center p-4 w-full max-w-xs bg-white rounded-2xl shadow-lg">
-  <h1 class="text-3xl font-bold mb-4 text-pink-600">Juego de Tablas</h1>
-  
-  <label class="block mb-2 font-semibold text-pink-700">Nombre:</label>
-  <input id="username" type="text" class="border border-pink-300 p-2 rounded w-full mb-4 text-center" placeholder="Tu nombre">
+  <!-- Start Screen -->
+  <div id="start-screen" class="text-center p-4 w-full max-w-xs bg-white rounded-2xl shadow-lg">
+    <h1 class="text-3xl font-bold mb-4 text-pink-600" id="title-label">Juego de Tablas</h1>
 
-  <label class="block mb-2 font-semibold text-pink-700">Avatar:</label>
-  <div id="avatar-options" class="flex flex-wrap justify-center gap-2 mb-4">
-    <span class="avatar-option">😀</span>
-    <span class="avatar-option">🐱</span>
-    <span class="avatar-option">🐶</span>
-    <span class="avatar-option">🦄</span>
-    <span class="avatar-option">🐯</span>
-    <span class="avatar-option">🐼</span>
-    <span class="avatar-option">🐰</span>
-    <span class="avatar-option">🐸</span>
-    <span class="avatar-option">🐙</span>
-    <span class="avatar-option">🐥</span>
-    <span class="avatar-option">🦋</span>
-    <span class="avatar-option">🌸</span>
-    <span class="avatar-option">🍀</span>
-  </div>
+    <label class="block mb-2 font-semibold text-pink-700" id="name-label">Nombre:</label>
+    <input id="username" type="text" class="border border-pink-300 p-2 rounded w-full mb-4 text-center" placeholder="Tu nombre">
 
-  <label class="block mb-2 font-semibold text-pink-700">Idioma:</label>
-  <div id="language-options" class="flex justify-center gap-4 mb-4">
-    <button class="lang-btn text-2xl" data-lang="es">🇪🇸</button>
-    <button class="lang-btn text-2xl" data-lang="en">🇬🇧</button>
-    <button class="lang-btn text-2xl" data-lang="de">🇩🇪</button>
-  </div>
-
-  <button id="start-btn" class="bg-pink-500 text-white px-4 py-2 rounded w-full font-bold">Comenzar</button>
-</div>
-
-<!-- Game Screen -->
-<div id="game-screen" class="hidden text-center p-4 w-full max-w-xs bg-white rounded-2xl shadow-lg">
-  <div class="flex justify-between items-center mb-2 text-sm">
-    <div><strong id="points-label">Puntos:</strong> <span id="score">0</span></div>
-    <div><strong id="time-label">Tiempo:</strong> <span id="timer" class="font-bold text-pink-600">10.0</span>s</div>
-    <div id="lang-switch" class="flex gap-1">
-      <button class="lang-btn text-xl" data-lang="es">🇪🇸</button>
-      <button class="lang-btn text-xl" data-lang="en">🇬🇧</button>
-      <button class="lang-btn text-xl" data-lang="de">🇩🇪</button>
+    <label class="block mb-2 font-semibold text-pink-700" id="avatar-label">Avatar:</label>
+    <div id="avatar-options" class="flex flex-wrap justify-center gap-2 mb-4">
+      <span class="avatar-option">😀</span>
+      <span class="avatar-option">🐱</span>
+      <span class="avatar-option">🐶</span>
+      <span class="avatar-option">🦄</span>
+      <span class="avatar-option">🐯</span>
+      <span class="avatar-option">🐼</span>
+      <span class="avatar-option">🐰</span>
+      <span class="avatar-option">🐸</span>
+      <span class="avatar-option">🐙</span>
+      <span class="avatar-option">🐥</span>
+      <span class="avatar-option">🦋</span>
+      <span class="avatar-option">🌸</span>
+      <span class="avatar-option">🍀</span>
     </div>
+
+    <label class="block mb-2 font-semibold text-pink-700" id="language-label">Idioma:</label>
+    <div id="language-options" class="flex justify-center gap-4 mb-4">
+      <button class="lang-btn text-2xl" data-lang="es" aria-label="Español">🇪🇸</button>
+      <button class="lang-btn text-2xl" data-lang="en" aria-label="English">🇬🇧</button>
+      <button class="lang-btn text-2xl" data-lang="de" aria-label="Deutsch">🇩🇪</button>
+    </div>
+
+    <button id="start-btn" class="bg-pink-500 text-white px-4 py-2 rounded w-full font-bold">Comenzar</button>
   </div>
 
-  <div id="question-progress" class="mb-2 text-sm text-pink-700 font-semibold"></div>
-  <div id="question" class="text-2xl font-bold mb-4 text-pink-700"></div>
-  <input id="answer" type="number" class="border border-pink-300 p-2 rounded w-full mb-4 text-center" placeholder="Respuesta">
-  <button id="submit-btn" class="bg-pink-500 text-white px-4 py-2 rounded w-full font-bold">Enviar</button>
-  <div id="feedback" class="mt-4 font-semibold text-pink-600"></div>
-</div>
+  <!-- Game Screen -->
+  <div id="game-screen" class="hidden text-center p-4 w-full max-w-xs bg-white rounded-2xl shadow-lg">
+    <div class="flex justify-between items-center mb-2 text-sm">
+      <div><strong id="points-label">Puntos:</strong> <span id="score">0</span></div>
+      <div><strong id="time-label">Tiempo:</strong> <span id="timer" class="font-bold text-pink-600">10.0</span>s</div>
+      <div id="lang-switch" class="flex gap-1">
+        <button class="lang-btn text-xl" data-lang="es" aria-label="Español">🇪🇸</button>
+        <button class="lang-btn text-xl" data-lang="en" aria-label="English">🇬🇧</button>
+        <button class="lang-btn text-xl" data-lang="de" aria-label="Deutsch">🇩🇪</button>
+      </div>
+    </div>
 
-<!-- End Screen -->
-<div id="end-screen" class="hidden text-center p-4 w-full max-w-xs bg-white rounded-2xl shadow-lg">
-  <h2 id="end-label" class="text-2xl font-bold mb-4 text-pink-600">Fin del Juego</h2>
-  <p class="mb-4"><span id="final-score-label">Puntuación final:</span> <span id="final-score"></span></p>
-  <div id="ranking" class="mb-4"></div>
-  <button id="restart-btn" class="bg-pink-500 text-white px-4 py-2 rounded w-full mb-2 font-bold">Reiniciar</button>
-  <button id="new-player-btn" class="bg-pink-300 text-white px-4 py-2 rounded w-full font-bold">Nuevo Jugador</button>
-</div>
+    <div id="question-progress" class="mb-2 text-sm text-pink-700 font-semibold"></div>
+    <div id="question" class="text-2xl font-bold mb-4 text-pink-700"></div>
+    <input id="answer" type="number" class="border border-pink-300 p-2 rounded w-full mb-4 text-center" placeholder="Respuesta">
+    <button id="submit-btn" class="bg-pink-500 text-white px-4 py-2 rounded w-full font-bold">Enviar</button>
+    <div id="feedback" class="mt-4 font-semibold text-pink-600"></div>
+  </div>
 
-<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-<script>
-let currentLang = 'es';
-let translations = {
-  es: { start: 'Comenzar', points: 'Puntos', time: 'Tiempo', answer: 'Respuesta', send: 'Enviar', end: 'Fin del Juego', finalScore: 'Puntuación final', restart: 'Reiniciar', newPlayer: 'Nuevo Jugador', correct: '¡Correcto! ¡Muy bien, esta respuesta es correcta!', wrong: 'Ohhhh, esta respuesta no es correcta.', qOf: 'Pregunta {n} de {total}', rankPos: '#', rankAvatar: '🎭', rankName: 'Nombre', rankPoints: 'Puntos' },
-  en: { start: 'Start', points: 'Points', time: 'Time', answer: 'Answer', send: 'Submit', end: 'Game Over', finalScore: 'Final Score', restart: 'Restart', newPlayer: 'New Player', correct: 'Correct! Great job, that answer is correct!', wrong: 'Oh no, this answer is unfortunately not correct.', qOf: 'Question {n} of {total}', rankPos: '#', rankAvatar: '🎭', rankName: 'Name', rankPoints: 'Points' },
-  de: { start: 'Starten', points: 'Punkte', time: 'Zeit', answer: 'Antwort', send: 'Senden', end: 'Spiel Ende', finalScore: 'Endpunktzahl', restart: 'Neu starten', newPlayer: 'Neuer Spieler', correct: 'Richtig! Sehr gut, diese Antwort ist korrekt!', wrong: 'Oh nein, diese Antwort ist leider nicht korrekt.', qOf: 'Frage {n} von {total}', rankPos: '#', rankAvatar: '🎭', rankName: 'Name', rankPoints: 'Punkte' }
-};
+  <!-- End Screen -->
+  <div id="end-screen" class="hidden text-center p-4 w-full max-w-xs bg-white rounded-2xl shadow-lg">
+    <h2 id="end-label" class="text-2xl font-bold mb-4 text-pink-600">Spielende</h2>
+    <p class="mb-4"><span id="final-score-label">Puntuación final:</span> <span id="final-score"></span></p>
+    <div id="ranking" class="mb-2"></div>
+    <div class="mb-4">
+      <button id="reset-btn" class="text-xs text-rose-600 underline" type="button">🔒 Reset ranking (admin)</button>
+    </div>
+    <button id="restart-btn" class="bg-pink-500 text-white px-4 py-2 rounded w-full mb-2 font-bold">Reiniciar</button>
+    <button id="new-player-btn" class="bg-pink-300 text-white px-4 py-2 rounded w-full font-bold">Nuevo Jugador</button>
+  </div>
 
-let username = '', avatar = '', score = 0, questionCount = 0, timer, countdown = 10, ranking = JSON.parse(localStorage.getItem('ranking') || '[]');
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <script>
+    // ---- i18n ----
+    let currentLang = 'es';
+    const t = {
+      es: {
+        title: 'Juego de Tablas',
+        nameLabel: 'Nombre:',
+        avatarLabel: 'Avatar:',
+        languageLabel: 'Idioma:',
+        start: 'Comenzar',
+        points: 'Puntos',
+        time: 'Tiempo',
+        answerPH: 'Respuesta',
+        send: 'Enviar',
+        end: 'Fin del Juego',
+        finalScore: 'Puntuación final',
+        restart: 'Reiniciar',
+        newPlayer: 'Nuevo Jugador',
+        correct: '¡Correcto! ¡Muy bien, esta respuesta es correcta!',
+        wrong: 'Ohhhh, esta respuesta no es correcta.',
+        qOf: 'Pregunta {n} de {total}',
+        rankPos: '#',
+        rankAvatar: '🎭',
+        rankName: 'Nombre',
+        rankPoints: 'Puntos',
+        needNameAvatar: 'Por favor, escribe tu nombre y elige un avatar.',
+        adminReset: '🔒 Reset ranking (admin)',
+        adminPrompt: 'Introduce la contraseña de administrador:',
+        adminOk: 'Ranking reiniciado.',
+        adminBad: 'Contraseña incorrecta.'
+      },
+      en: {
+        title: 'Times Tables Game',
+        nameLabel: 'Name:',
+        avatarLabel: 'Avatar:',
+        languageLabel: 'Language:',
+        start: 'Start',
+        points: 'Points',
+        time: 'Time',
+        answerPH: 'Answer',
+        send: 'Submit',
+        end: 'Game Over',
+        finalScore: 'Final Score',
+        restart: 'Restart',
+        newPlayer: 'New Player',
+        correct: 'Correct! Great job, that answer is correct!',
+        wrong: 'Oh no, this answer is unfortunately not correct.',
+        qOf: 'Question {n} of {total}',
+        rankPos: '#',
+        rankAvatar: '🎭',
+        rankName: 'Name',
+        rankPoints: 'Points',
+        needNameAvatar: 'Please enter your name and choose an avatar.',
+        adminReset: '🔒 Reset ranking (admin)',
+        adminPrompt: 'Enter admin password:',
+        adminOk: 'Ranking reset.',
+        adminBad: 'Wrong password.'
+      },
+      de: {
+        title: 'Einmaleins-Spiel',
+        nameLabel: 'Name:',
+        avatarLabel: 'Avatar:',
+        languageLabel: 'Sprache:',
+        start: 'Starten',
+        points: 'Punkte',
+        time: 'Zeit',
+        answerPH: 'Antwort',
+        send: 'Senden',
+        end: 'Spielende',
+        finalScore: 'Endpunktzahl',
+        restart: 'Neu starten',
+        newPlayer: 'Neuer Spieler',
+        correct: 'Richtig! Sehr gut, diese Antwort ist korrekt!',
+        wrong: 'Oh nein, diese Antwort ist leider nicht korrekt.',
+        qOf: 'Frage {n} von {total}',
+        rankPos: '#',
+        rankAvatar: '🎭',
+        rankName: 'Name',
+        rankPoints: 'Punkte',
+        needNameAvatar: 'Bitte gib deinen Namen ein und wähle ein Avatar.',
+        adminReset: '🔒 Rangliste zurücksetzen (Admin)',
+        adminPrompt: 'Admin-Passwort eingeben:',
+        adminOk: 'Rangliste zurückgesetzt.',
+        adminBad: 'Falsches Passwort.'
+      }
+    };
 
-document.querySelectorAll('.avatar-option').forEach(opt => {
-  opt.addEventListener('click', () => {
-    document.querySelectorAll('.avatar-option').forEach(o => o.classList.remove('selected'));
-    opt.classList.add('selected');
-    avatar = opt.textContent;
-  });
-});
+    function applyLang() {
+      const L = t[currentLang];
+      // Start screen
+      document.getElementById('title-label').textContent = L.title;
+      document.getElementById('name-label').textContent = L.nameLabel;
+      document.getElementById('avatar-label').textContent = L.avatarLabel;
+      document.getElementById('language-label').textContent = L.languageLabel;
+      document.getElementById('start-btn').textContent = L.start;
+      document.getElementById('username').placeholder = (currentLang==='es' ? 'Tu nombre' : currentLang==='en' ? 'Your name' : 'Dein Name');
 
-document.querySelectorAll('.lang-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    currentLang = btn.dataset.lang;
-    updateLanguage();
-  });
-});
+      // Game screen
+      document.getElementById('points-label').textContent = L.points + ':';
+      document.getElementById('time-label').textContent = L.time + ':';
+      document.getElementById('answer').placeholder = L.answerPH;
+      document.getElementById('submit-btn').textContent = L.send;
 
-function updateLanguage() {
-  document.getElementById('start-btn').textContent = translations[currentLang].start;
-  document.getElementById('submit-btn').textContent = translations[currentLang].send;
-  document.getElementById('restart-btn').textContent = translations[currentLang].restart;
-  document.getElementById('new-player-btn').textContent = translations[currentLang].newPlayer;
-  document.getElementById('points-label').textContent = translations[currentLang].points + ':';
-  document.getElementById('time-label').textContent = translations[currentLang].time + ':';
-  document.getElementById('end-label').textContent = translations[currentLang].end;
-  document.getElementById('final-score-label').textContent = translations[currentLang].finalScore + ':';
-  if (document.getElementById('ranking').innerHTML) showRanking();
-}
+      // End screen
+      document.getElementById('end-label').textContent = L.end;
+      document.getElementById('final-score-label').textContent = L.finalScore + ':';
+      document.getElementById('restart-btn').textContent = L.restart;
+      document.getElementById('new-player-btn').textContent = L.newPlayer;
+      document.getElementById('reset-btn').textContent = L.adminReset;
 
-document.getElementById('start-btn').addEventListener('click', () => {
-  username = document.getElementById('username').value.trim();
-  if (!username || !avatar) {
-    alert('Por favor ingresa un nombre y selecciona un avatar.');
-    return;
-  }
-  score = 0;
-  questionCount = 0;
-  document.getElementById('score').textContent = score;
-  document.getElementById('start-screen').classList.add('hidden');
-  document.getElementById('game-screen').classList.remove('hidden');
-  nextQuestion();
-});
-
-function nextQuestion() {
-  if (questionCount >= 10) return endGame();
-  let a = Math.floor(Math.random()*10)+1;
-  let b = Math.floor(Math.random()*10)+1;
-  document.getElementById('question').textContent = `${a} × ${b}`;
-  document.getElementById('question-progress').textContent = translations[currentLang].qOf.replace('{n}', questionCount+1).replace('{total}', 10);
-  document.getElementById('answer').value = '';
-  document.getElementById('feedback').textContent = '';
-  countdown = 10;
-  document.getElementById('timer').textContent = countdown.toFixed(1);
-  clearInterval(timer);
-  timer = setInterval(() => {
-    countdown -= 0.1;
-    document.getElementById('timer').textContent = countdown.toFixed(1);
-    if (countdown <= 0) {
-      clearInterval(timer);
-      checkAnswer(null, a*b);
+      // If ranking visible, re-render headers in selected language
+      if (document.getElementById('ranking').innerHTML.trim()) {
+        showRanking();
+      }
     }
-  }, 100);
-  document.getElementById('submit-btn').onclick = () => checkAnswer(parseInt(document.getElementById('answer').value), a*b);
-}
 
-function checkAnswer(userAns, correctAns) {
-  clearInterval(timer);
-  if (userAns === correctAns) {
-    score += Math.ceil(countdown) * 100;
-    document.getElementById('feedback').textContent = translations[currentLang].correct;
-  } else {
-    document.getElementById('feedback').textContent = translations[currentLang].wrong;
-  }
-  document.getElementById('score').textContent = score;
-  questionCount++;
-  setTimeout(nextQuestion, 2000);
-}
+    // ---- Game state ----
+    let username = '', avatar = '', score = 0, questionCount = 0, tick, countdown = 10.0;
+    let ranking = JSON.parse(localStorage.getItem('ranking') || '[]');
+    const TOTAL_Q = 10;
+    const ADMIN_PASSWORD = 'admin123';
 
-function endGame() {
-  document.getElementById('game-screen').classList.add('hidden');
-  document.getElementById('end-screen').classList.remove('hidden');
-  document.getElementById('final-score').textContent = score;
-  confetti();
-  ranking.push({ name: username, avatar: avatar, score: score });
-  ranking.sort((a,b) => b.score - a.score);
-  ranking = ranking.slice(0,10);
-  localStorage.setItem('ranking', JSON.stringify(ranking));
-  showRanking();
-}
+    // Avatar selection
+    document.querySelectorAll('.avatar-option').forEach(opt => {
+      opt.addEventListener('click', () => {
+        document.querySelectorAll('.avatar-option').forEach(o => o.classList.remove('selected'));
+        opt.classList.add('selected');
+        avatar = opt.textContent;
+      });
+    });
 
-function showRanking() {
-  let html = `<table class="mx-auto text-sm"><tr><th>${translations[currentLang].rankPos}</th><th>${translations[currentLang].rankAvatar}</th><th>${translations[currentLang].rankName}</th><th>${translations[currentLang].rankPoints}</th></tr>`;
-  ranking.forEach((p,i) => {
-    let medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':'';
-    html += `<tr>
-      <td class="medal-cell">${medal || i+1}</td>
-      <td class="avatar-cell">${p.avatar}</td>
-      <td>${p.name}</td>
-      <td>${p.score}</td>
-    </tr>`;
-  });
-  html += '</table>';
-  document.getElementById('ranking').innerHTML = html;
-}
+    // Language buttons (both places)
+    document.querySelectorAll('.lang-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        currentLang = btn.dataset.lang;
+        applyLang();
+      });
+    });
 
-document.getElementById('restart-btn').addEventListener('click', () => {
-  score = 0;
-  questionCount = 0;
-  document.getElementById('end-screen').classList.add('hidden');
-  document.getElementById('game-screen').classList.remove('hidden');
-  nextQuestion();
-});
+    // Start button
+    document.getElementById('start-btn').addEventListener('click', () => {
+      const L = t[currentLang];
+      username = document.getElementById('username').value.trim();
+      if (!username || !avatar) { alert(L.needNameAvatar); return; }
+      score = 0; questionCount = 0;
+      document.getElementById('score').textContent = score;
+      document.getElementById('start-screen').classList.add('hidden');
+      document.getElementById('game-screen').classList.remove('hidden');
+      nextQuestion();
+    });
 
-document.getElementById('new-player-btn').addEventListener('click', () => {
-  document.getElementById('end-screen').classList.add('hidden');
-  document.getElementById('start-screen').classList.remove('hidden');
-});
-</script>
+    function nextQuestion() {
+      if (questionCount >= TOTAL_Q) return endGame();
+      const a = Math.floor(Math.random()*10)+1;
+      const b = Math.floor(Math.random()*10)+1;
+
+      document.getElementById('question').textContent = `${a} × ${b}`;
+      document.getElementById('question-progress').textContent =
+        t[currentLang].qOf.replace('{n}', questionCount + 1).replace('{total}', TOTAL_Q);
+      document.getElementById('answer').value = '';
+      document.getElementById('feedback').textContent = '';
+
+      countdown = 10.0;
+      document.getElementById('timer').textContent = countdown.toFixed(1);
+      clearInterval(tick);
+      tick = setInterval(() => {
+        countdown = Math.max(0, (countdown - 0.1));
+        document.getElementById('timer').textContent = countdown.toFixed(1);
+        if (countdown <= 0) {
+          clearInterval(tick);
+          checkAnswer(null, a*b);
+        }
+      }, 100);
+
+      document.getElementById('submit-btn').onclick = () => {
+        const val = document.getElementById('answer').value.trim();
+        const num = val === '' ? null : Number(val);
+        checkAnswer(num, a*b);
+      };
+    }
+
+    function checkAnswer(userAns, correctAns) {
+      clearInterval(tick);
+      const L = t[currentLang];
+      if (userAns === correctAns) {
+        // Points scale with remaining whole seconds (ceiling)
+        score += Math.max(0, Math.ceil(countdown)) * 100;
+        document.getElementById('feedback').textContent = L.correct;
+      } else {
+        document.getElementById('feedback').textContent = L.wrong;
+      }
+      document.getElementById('score').textContent = score;
+      questionCount++;
+      setTimeout(nextQuestion, 2000);
+    }
+
+    function endGame() {
+      document.getElementById('game-screen').classList.add('hidden');
+      document.getElementById('end-screen').classList.remove('hidden');
+      document.getElementById('final-score').textContent = score;
+
+      // confetti celebration
+      confetti({ particleCount: 160, spread: 70, origin: { y: 0.6 } });
+
+      // Save to local ranking
+      ranking.push({ name: username, avatar, score });
+      ranking.sort((a,b) => b.score - a.score);
+      ranking = ranking.slice(0, 10);
+      localStorage.setItem('ranking', JSON.stringify(ranking));
+      showRanking();
+    }
+
+    function showRanking() {
+      const L = t[currentLang];
+      let html = `<table class="mx-auto text-sm">
+        <tr>
+          <th>${L.rankPos}</th>
+          <th>${L.rankAvatar}</th>
+          <th class="name-cell">${L.rankName}</th>
+          <th>${L.rankPoints}</th>
+        </tr>`;
+      ranking.forEach((p,i) => {
+        const medal = i===0 ? '🥇' : i===1 ? '🥈' : i===2 ? '🥉' : '';
+        html += `<tr>
+          <td class="medal-cell">${medal || (i+1)}</td>
+          <td class="avatar-cell">${p.avatar}</td>
+          <td class="name-cell">${p.name}</td>
+          <td>${p.score}</td>
+        </tr>`;
+      });
+      html += `</table>`;
+      document.getElementById('ranking').innerHTML = html;
+    }
+
+    // Admin: reset ranking (password protected)
+    document.getElementById('reset-btn').addEventListener('click', () => {
+      const L = t[currentLang];
+      const pass = prompt(L.adminPrompt);
+      if (pass === ADMIN_PASSWORD) {
+        localStorage.removeItem('ranking');
+        ranking = [];
+        showRanking();
+        alert(L.adminOk);
+      } else if (pass !== null) {
+        alert(L.adminBad);
+      }
+    });
+
+    // Restart & New player
+    document.getElementById('restart-btn').addEventListener('click', () => {
+      document.getElementById('end-screen').classList.add('hidden');
+      document.getElementById('game-screen').classList.remove('hidden');
+      score = 0; questionCount = 0;
+      document.getElementById('score').textContent = score;
+      nextQuestion();
+    });
+
+    document.getElementById('new-player-btn').addEventListener('click', () => {
+      document.getElementById('end-screen').classList.add('hidden');
+      document.getElementById('start-screen').classList.remove('hidden');
+    });
+
+    // Initial language apply
+    applyLang();
+  </script>
 </body>
 </html>
