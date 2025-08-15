@@ -1,405 +1,244 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>Tablas Rápidas</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <style>
-    @media (max-width: 375px) {
-      h1 { font-size: 1.4rem; }
-      #problem { font-size: 2rem; }
-      input, button, select { font-size: 1rem; padding: 0.6rem; }
-      #feedback { font-size: 1rem; }
-    }
-    .flag-btn { filter: saturate(0.9); transition: transform .1s ease; }
-    .flag-btn:active { transform: scale(0.95); }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Juego de Tablas</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body {
+    background: linear-gradient(to bottom right, #ffe6f0, #fff0f5);
+    font-family: 'Comic Sans MS', cursive, sans-serif;
+  }
+  .avatar-option {
+    cursor: pointer;
+    font-size: 2.2rem;
+    padding: 0.4rem 0.6rem;
+    border-radius: 0.8rem;
+    transition: transform 0.15s, background-color 0.2s;
+  }
+  .avatar-option:hover {
+    transform: scale(1.15);
+    background-color: #ffd6e8;
+  }
+  .avatar-option.selected {
+    background-color: #fbb6ce;
+    transform: scale(1.2);
+  }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    max-width: 320px;
+  }
+  th, td {
+    padding: 0.4rem;
+    text-align: center;
+  }
+  th {
+    background-color: #fbcfe8;
+  }
+  .medal-cell, .avatar-cell {
+    width: 2.5rem;
+    text-align: center;
+  }
+  button {
+    transition: transform 0.1s;
+  }
+  button:active {
+    transform: scale(0.95);
+  }
+</style>
 </head>
-<body class="min-h-screen bg-gradient-to-br from-pink-50 via-white to-purple-50 flex items-center justify-center p-4">
+<body class="flex flex-col items-center justify-center min-h-screen p-2">
 
-<!-- Selector de idioma fijo (siempre visible) -->
-<div class="fixed top-2 right-2 z-50 flex gap-2">
-  <button class="flag-btn text-xl" data-lang="es" aria-label="Español">🇪🇸</button>
-  <button class="flag-btn text-xl" data-lang="en" aria-label="English">🇬🇧</button>
-  <button class="flag-btn text-xl" data-lang="de" aria-label="Deutsch">🇩🇪</button>
+<!-- Start Screen -->
+<div id="start-screen" class="text-center p-4 w-full max-w-xs bg-white rounded-2xl shadow-lg">
+  <h1 class="text-3xl font-bold mb-4 text-pink-600">Juego de Tablas</h1>
+  
+  <label class="block mb-2 font-semibold text-pink-700">Nombre:</label>
+  <input id="username" type="text" class="border border-pink-300 p-2 rounded w-full mb-4 text-center" placeholder="Tu nombre">
+
+  <label class="block mb-2 font-semibold text-pink-700">Avatar:</label>
+  <div id="avatar-options" class="flex flex-wrap justify-center gap-2 mb-4">
+    <span class="avatar-option">😀</span>
+    <span class="avatar-option">🐱</span>
+    <span class="avatar-option">🐶</span>
+    <span class="avatar-option">🦄</span>
+    <span class="avatar-option">🐯</span>
+    <span class="avatar-option">🐼</span>
+    <span class="avatar-option">🐰</span>
+    <span class="avatar-option">🐸</span>
+    <span class="avatar-option">🐙</span>
+    <span class="avatar-option">🐥</span>
+    <span class="avatar-option">🦋</span>
+    <span class="avatar-option">🌸</span>
+    <span class="avatar-option">🍀</span>
+  </div>
+
+  <label class="block mb-2 font-semibold text-pink-700">Idioma:</label>
+  <div id="language-options" class="flex justify-center gap-4 mb-4">
+    <button class="lang-btn text-2xl" data-lang="es">🇪🇸</button>
+    <button class="lang-btn text-2xl" data-lang="en">🇬🇧</button>
+    <button class="lang-btn text-2xl" data-lang="de">🇩🇪</button>
+  </div>
+
+  <button id="start-btn" class="bg-pink-500 text-white px-4 py-2 rounded w-full font-bold">Comenzar</button>
 </div>
 
-<main class="w-full max-w-md">
-  <!-- Pantalla: selección de idioma -->
-  <section id="lang-section" class="bg-white/80 rounded-xl shadow-lg p-6 text-center">
-    <h1 class="font-extrabold text-pink-600 text-2xl mb-2" data-i18n="lang_title">Elige tu idioma</h1>
-    <p class="text-slate-600 mb-4" data-i18n="lang_subtitle">Selecciona un idioma para continuar</p>
-    <div class="grid grid-cols-3 gap-3">
-      <button class="bg-white border border-pink-200 rounded-xl p-4 hover:bg-pink-50 text-3xl" data-choose-lang="es">🇪🇸</button>
-      <button class="bg-white border border-pink-200 rounded-xl p-4 hover:bg-pink-50 text-3xl" data-choose-lang="en">🇬🇧</button>
-      <button class="bg-white border border-pink-200 rounded-xl p-4 hover:bg-pink-50 text-3xl" data-choose-lang="de">🇩🇪</button>
+<!-- Game Screen -->
+<div id="game-screen" class="hidden text-center p-4 w-full max-w-xs bg-white rounded-2xl shadow-lg">
+  <div class="flex justify-between items-center mb-2 text-sm">
+    <div><strong id="points-label">Puntos:</strong> <span id="score">0</span></div>
+    <div><strong id="time-label">Tiempo:</strong> <span id="timer" class="font-bold text-pink-600">10.0</span>s</div>
+    <div id="lang-switch" class="flex gap-1">
+      <button class="lang-btn text-xl" data-lang="es">🇪🇸</button>
+      <button class="lang-btn text-xl" data-lang="en">🇬🇧</button>
+      <button class="lang-btn text-xl" data-lang="de">🇩🇪</button>
     </div>
-  </section>
+  </div>
 
-  <!-- Pantalla de inicio (nombre + emoji) -->
-  <section id="start-section" class="hidden bg-white/80 rounded-xl shadow-lg p-4 text-center">
-    <h1 class="font-extrabold text-pink-600 mb-4" data-i18n="title">🎀 Tablas Rápidas 🎀</h1>
-    <p class="mb-3" data-i18n="enter_name_icon">Introduce tu nombre y elige un icono</p>
-    <input id="player-name" type="text" placeholder="Tu nombre"
-           class="w-full rounded-lg border border-pink-200 px-3 py-2 mb-3" required>
-    <div id="icon-choices" class="flex flex-wrap justify-center gap-2 mb-4"></div>
-    <button id="start-btn" class="bg-pink-500 hover:bg-pink-600 text-white px-4 py-2 rounded-lg" data-i18n="start">Empezar</button>
-  </section>
+  <div id="question-progress" class="mb-2 text-sm text-pink-700 font-semibold"></div>
+  <div id="question" class="text-2xl font-bold mb-4 text-pink-700"></div>
+  <input id="answer" type="number" class="border border-pink-300 p-2 rounded w-full mb-4 text-center" placeholder="Respuesta">
+  <button id="submit-btn" class="bg-pink-500 text-white px-4 py-2 rounded w-full font-bold">Enviar</button>
+  <div id="feedback" class="mt-4 font-semibold text-pink-600"></div>
+</div>
 
-  <!-- Juego -->
-  <section id="game-section" class="hidden bg-white/80 rounded-xl shadow-lg p-4">
-    <header class="flex items-center justify-between">
-      <h1 class="font-extrabold text-pink-600" data-i18n="title">Tablas Rápidas</h1>
-      <div class="text-right">
-        <div class="text-xs text-slate-500" data-i18n="score">Puntuación</div>
-        <div id="total-score" class="text-lg font-semibold text-emerald-600">0</div>
-      </div>
-    </header>
+<!-- End Screen -->
+<div id="end-screen" class="hidden text-center p-4 w-full max-w-xs bg-white rounded-2xl shadow-lg">
+  <h2 id="end-label" class="text-2xl font-bold mb-4 text-pink-600">Fin del Juego</h2>
+  <p class="mb-4"><span id="final-score-label">Puntuación final:</span> <span id="final-score"></span></p>
+  <div id="ranking" class="mb-4"></div>
+  <button id="restart-btn" class="bg-pink-500 text-white px-4 py-2 rounded w-full mb-2 font-bold">Reiniciar</button>
+  <button id="new-player-btn" class="bg-pink-300 text-white px-4 py-2 rounded w-full font-bold">Nuevo Jugador</button>
+</div>
 
-    <div class="mt-3 flex justify-between text-sm text-slate-500">
-      <div><span data-i18n="time">Tiempo</span>: <span id="timer" class="font-bold text-pink-600">10.0</span><span data-i18n="seconds_suffix">s</span></div>
-      <div><span data-i18n="points">Puntos</span>: <span id="current-points" class="font-bold text-amber-600">1000</span></div>
-    </div>
-
-    <div class="mt-4 text-center text-3xl font-bold text-pink-700" id="problem"></div>
-
-    <form id="answer-form" class="mt-4 flex gap-2">
-      <input id="answer" type="number" autocomplete="off"
-             class="flex-1 rounded-lg border border-pink-200 focus:ring-2 focus:ring-pink-300 px-3 py-2 text-lg"
-             placeholder="Respuesta" required />
-      <button id="check-btn" type="submit"
-              class="bg-pink-500 hover:bg-pink-600 text-white px-3 py-2 rounded-lg">✔</button>
-    </form>
-
-    <div id="feedback" class="mt-3 text-center font-semibold"></div>
-    <div class="mt-2 text-center text-xs text-slate-500"><span data-i18n="question">Pregunta</span> <span id="question-number">1</span> / 10</div>
-  </section>
-
-  <!-- Final -->
-  <section id="final-section" class="hidden bg-white/90 rounded-xl shadow-lg p-6 text-center">
-    <h2 class="text-2xl font-extrabold text-pink-600 mb-2" data-i18n="game_over">¡Fin del juego!</h2>
-    <p class="text-slate-700 mb-4" data-i18n="completed_10">Has completado 10 multiplicaciones</p>
-    <div class="text-5xl font-bold text-emerald-600 mb-4" id="final-score">0</div>
-    <p id="ranking-position" class="mb-4 font-semibold"></p>
-    <h3 class="text-lg font-bold mb-2">🏆 <span data-i18n="ranking">Ranking</span></h3>
-    <ul id="ranking-list" class="mb-4 text-left space-y-1"></ul>
-    <div class="flex gap-2 justify-center">
-      <button id="restart-btn" class="bg-pink-500 hover:bg-pink-600 text-white px-4 py-2 rounded-lg" data-i18n="restart">Reiniciar</button>
-      <button id="new-player-btn" class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg" data-i18n="new_player">Nuevo jugador</button>
-      <button id="reset-ranking-btn" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg" data-i18n="reset_ranking">Reset Ranking</button>
-    </div>
-  </section>
-</main>
-
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 <script>
-/* ===============================
-   Traducciones
-   =============================== */
-const translations = {
-  es: {
-    lang_title: "Elige tu idioma",
-    lang_subtitle: "Selecciona un idioma para continuar",
-    title: "Tablas Rápidas",
-    enter_name_icon: "Introduce tu nombre y elige un icono",
-    start: "Empezar",
-    score: "Puntuación",
-    time: "Tiempo",
-    points: "Puntos",
-    seconds_suffix: "s",
-    question: "Pregunta",
-    correct: "✓ Correcto",
-    incorrect_was: "✕ Incorrecto. Era {answer}",
-    game_over: "¡Fin del juego!",
-    completed_10: "Has completado 10 multiplicaciones",
-    your_rank: "Tu posición en el ranking: #{pos}",
-    ranking: "Ranking",
-    restart: "Reiniciar",
-    new_player: "Nuevo jugador",
-    reset_ranking: "Reset Ranking",
-    admin_prompt: "Introduce la contraseña de administrador:",
-    admin_ok: "Ranking reiniciado.",
-    admin_bad: "Contraseña incorrecta.",
-    need_name_icon: "Introduce tu nombre y elige un icono"
-  },
-  en: {
-    lang_title: "Choose your language",
-    lang_subtitle: "Select a language to continue",
-    title: "Fast Tables",
-    enter_name_icon: "Enter your name and pick an icon",
-    start: "Start",
-    score: "Score",
-    time: "Time",
-    points: "Points",
-    seconds_suffix: "s",
-    question: "Question",
-    correct: "✓ Correct",
-    incorrect_was: "✕ Incorrect. It was {answer}",
-    game_over: "Game Over!",
-    completed_10: "You completed 10 multiplications",
-    your_rank: "Your ranking position: #{pos}",
-    ranking: "Leaderboard",
-    restart: "Restart",
-    new_player: "New player",
-    reset_ranking: "Reset Ranking",
-    admin_prompt: "Enter admin password:",
-    admin_ok: "Ranking reset.",
-    admin_bad: "Wrong password.",
-    need_name_icon: "Please enter your name and choose an icon"
-  },
-  de: {
-    lang_title: "Wähle deine Sprache",
-    lang_subtitle: "Sprache auswählen, um fortzufahren",
-    title: "Schnelle Tabellen",
-    enter_name_icon: "Gib deinen Namen ein und wähle ein Icon",
-    start: "Start",
-    score: "Punkte",
-    time: "Zeit",
-    points: "Punkte",
-    seconds_suffix: "s",
-    question: "Frage",
-    correct: "✓ Richtig",
-    incorrect_was: "✕ Falsch. Es war {answer}",
-    game_over: "Spielende!",
-    completed_10: "Du hast 10 Aufgaben gelöst",
-    your_rank: "Deine Platzierung: #{pos}",
-    ranking: "Bestenliste",
-    restart: "Neu starten",
-    new_player: "Neuer Spieler",
-    reset_ranking: "Rangliste zurücksetzen",
-    admin_prompt: "Admin-Passwort eingeben:",
-    admin_ok: "Rangliste zurückgesetzt.",
-    admin_bad: "Falsches Passwort.",
-    need_name_icon: "Bitte Namen eingeben und ein Icon wählen"
-  }
+let currentLang = 'es';
+let translations = {
+  es: { start: 'Comenzar', points: 'Puntos', time: 'Tiempo', answer: 'Respuesta', send: 'Enviar', end: 'Fin del Juego', finalScore: 'Puntuación final', restart: 'Reiniciar', newPlayer: 'Nuevo Jugador', correct: '¡Correcto! ¡Muy bien, esta respuesta es correcta!', wrong: 'Ohhhh, esta respuesta no es correcta.', qOf: 'Pregunta {n} de {total}', rankPos: '#', rankAvatar: '🎭', rankName: 'Nombre', rankPoints: 'Puntos' },
+  en: { start: 'Start', points: 'Points', time: 'Time', answer: 'Answer', send: 'Submit', end: 'Game Over', finalScore: 'Final Score', restart: 'Restart', newPlayer: 'New Player', correct: 'Correct! Great job, that answer is correct!', wrong: 'Oh no, this answer is unfortunately not correct.', qOf: 'Question {n} of {total}', rankPos: '#', rankAvatar: '🎭', rankName: 'Name', rankPoints: 'Points' },
+  de: { start: 'Starten', points: 'Punkte', time: 'Zeit', answer: 'Antwort', send: 'Senden', end: 'Spiel Ende', finalScore: 'Endpunktzahl', restart: 'Neu starten', newPlayer: 'Neuer Spieler', correct: 'Richtig! Sehr gut, diese Antwort ist korrekt!', wrong: 'Oh nein, diese Antwort ist leider nicht korrekt.', qOf: 'Frage {n} von {total}', rankPos: '#', rankAvatar: '🎭', rankName: 'Name', rankPoints: 'Punkte' }
 };
 
-const DEFAULT_LANG = localStorage.getItem('lang') || 'es';
-let LANG = ['es','en','de'].includes(DEFAULT_LANG) ? DEFAULT_LANG : 'es';
+let username = '', avatar = '', score = 0, questionCount = 0, timer, countdown = 10, ranking = JSON.parse(localStorage.getItem('ranking') || '[]');
 
-function t(key, vars = {}) {
-  const pack = translations[LANG] || translations.es;
-  let str = pack[key] || key;
-  Object.keys(vars).forEach(k => {
-    str = str.replaceAll(`{${k}}`, vars[k]);
+document.querySelectorAll('.avatar-option').forEach(opt => {
+  opt.addEventListener('click', () => {
+    document.querySelectorAll('.avatar-option').forEach(o => o.classList.remove('selected'));
+    opt.classList.add('selected');
+    avatar = opt.textContent;
   });
-  return str;
+});
+
+document.querySelectorAll('.lang-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    currentLang = btn.dataset.lang;
+    updateLanguage();
+  });
+});
+
+function updateLanguage() {
+  document.getElementById('start-btn').textContent = translations[currentLang].start;
+  document.getElementById('submit-btn').textContent = translations[currentLang].send;
+  document.getElementById('restart-btn').textContent = translations[currentLang].restart;
+  document.getElementById('new-player-btn').textContent = translations[currentLang].newPlayer;
+  document.getElementById('points-label').textContent = translations[currentLang].points + ':';
+  document.getElementById('time-label').textContent = translations[currentLang].time + ':';
+  document.getElementById('end-label').textContent = translations[currentLang].end;
+  document.getElementById('final-score-label').textContent = translations[currentLang].finalScore + ':';
+  if (document.getElementById('ranking').innerHTML) showRanking();
 }
 
-function applyTranslations() {
-  document.querySelectorAll('[data-i18n]').forEach(el => {
-    const key = el.getAttribute('data-i18n');
-    el.textContent = t(key);
-  });
-  // Placeholder del input de respuesta
-  const answer = document.getElementById('answer');
-  if (answer) {
-    if (LANG === 'es') answer.placeholder = 'Respuesta';
-    if (LANG === 'en') answer.placeholder = 'Answer';
-    if (LANG === 'de') answer.placeholder = 'Antwort';
+document.getElementById('start-btn').addEventListener('click', () => {
+  username = document.getElementById('username').value.trim();
+  if (!username || !avatar) {
+    alert('Por favor ingresa un nombre y selecciona un avatar.');
+    return;
   }
-  // Placeholder del nombre
-  const nameInput = document.getElementById('player-name');
-  if (nameInput) {
-    if (LANG === 'es') nameInput.placeholder = 'Tu nombre';
-    if (LANG === 'en') nameInput.placeholder = 'Your name';
-    if (LANG === 'de') nameInput.placeholder = 'Dein Name';
-  }
-}
+  score = 0;
+  questionCount = 0;
+  document.getElementById('score').textContent = score;
+  document.getElementById('start-screen').classList.add('hidden');
+  document.getElementById('game-screen').classList.remove('hidden');
+  nextQuestion();
+});
 
-/* ===============================
-   Juego (versión anterior + i18n)
-   =============================== */
-const emojis = ["🦄","🐱","🌸","🐶","🦋","🍓","🎀","🐼","🌈","🏆"];
-let chosenEmoji = null;
-let playerName = "";
-let a, b, totalScore = 0, currentPoints = 1000, timer = 10, timerInterval, questionsDone = 0;
-
-const langSection = document.getElementById('lang-section');
-const startSection = document.getElementById('start-section');
-const gameSection = document.getElementById('game-section');
-const finalSection = document.getElementById('final-section');
-const rankingList = document.getElementById('ranking-list');
-
-function rand1to10() { return Math.floor(Math.random() * 10) + 1; }
-
-function renderIcons(){
-  const container = document.getElementById('icon-choices');
-  container.innerHTML = "";
-  emojis.forEach(emoji=>{
-    const btn = document.createElement('button');
-    btn.textContent = emoji;
-    btn.className = "text-2xl p-2 rounded-lg border border-pink-300 hover:bg-pink-100";
-    btn.onclick = (e)=>{
-      e.preventDefault();
-      chosenEmoji = emoji;
-      [...container.children].forEach(c=>c.classList.remove('bg-pink-200'));
-      btn.classList.add('bg-pink-200');
-    }
-    container.appendChild(btn);
-  });
-}
-
-function startTimer() {
-  clearInterval(timerInterval);
-  timer = 10; currentPoints = 1000;
-  document.getElementById('timer').textContent = timer.toFixed(1);
-  document.getElementById('current-points').textContent = currentPoints;
-  timerInterval = setInterval(() => {
-    timer -= 0.1;
-    if (timer < 0) timer = 0;
-    currentPoints = Math.max(0, Math.floor(1000 * (timer / 10)));
-    document.getElementById('timer').textContent = timer.toFixed(1);
-    document.getElementById('current-points').textContent = currentPoints;
-    if (timer <= 0) { clearInterval(timerInterval); checkAnswer(); }
-  }, 100);
-}
-
-function newProblem() {
-  a = rand1to10(); b = rand1to10();
-  document.getElementById('problem').textContent = `${a} × ${b} = ?`;
-  document.getElementById('feedback').textContent = '';
+function nextQuestion() {
+  if (questionCount >= 10) return endGame();
+  let a = Math.floor(Math.random()*10)+1;
+  let b = Math.floor(Math.random()*10)+1;
+  document.getElementById('question').textContent = `${a} × ${b}`;
+  document.getElementById('question-progress').textContent = translations[currentLang].qOf.replace('{n}', questionCount+1).replace('{total}', 10);
   document.getElementById('answer').value = '';
-  document.getElementById('answer').disabled = false;
-  document.getElementById('check-btn').disabled = false;
-  startTimer();
+  document.getElementById('feedback').textContent = '';
+  countdown = 10;
+  document.getElementById('timer').textContent = countdown.toFixed(1);
+  clearInterval(timer);
+  timer = setInterval(() => {
+    countdown -= 0.1;
+    document.getElementById('timer').textContent = countdown.toFixed(1);
+    if (countdown <= 0) {
+      clearInterval(timer);
+      checkAnswer(null, a*b);
+    }
+  }, 100);
+  document.getElementById('submit-btn').onclick = () => checkAnswer(parseInt(document.getElementById('answer').value), a*b);
 }
 
-function checkAnswer() {
-  clearInterval(timerInterval);
-  document.getElementById('answer').disabled = true;
-  document.getElementById('check-btn').disabled = true;
-  const expected = a * b;
-  const user = Number(document.getElementById('answer').value.trim());
-  if (user === expected) {
-    totalScore += currentPoints;
-    feedback.className = "mt-3 text-center font-semibold text-emerald-600";
-    feedback.textContent = t('correct') + ` (+${currentPoints} pts)`;
+function checkAnswer(userAns, correctAns) {
+  clearInterval(timer);
+  if (userAns === correctAns) {
+    score += Math.ceil(countdown) * 100;
+    document.getElementById('feedback').textContent = translations[currentLang].correct;
   } else {
-    feedback.className = "mt-3 text-center font-semibold text-rose-600";
-    feedback.textContent = t('incorrect_was', {answer: expected});
+    document.getElementById('feedback').textContent = translations[currentLang].wrong;
   }
-  document.getElementById('total-score').textContent = totalScore;
-  questionsDone++;
-  document.getElementById('question-number').textContent = questionsDone;
-  setTimeout(() => {
-    if (questionsDone >= 10) showFinalScore();
-    else newProblem();
-  }, 1500);
+  document.getElementById('score').textContent = score;
+  questionCount++;
+  setTimeout(nextQuestion, 2000);
 }
 
-function showFinalScore() {
-  gameSection.classList.add('hidden');
-  finalSection.classList.remove('hidden');
-  document.getElementById('final-score').textContent = totalScore;
-  saveScore();
-  confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
-}
-
-function saveScore(){
-  let ranking = JSON.parse(localStorage.getItem('ranking')||"[]");
-  ranking.push({name: playerName, emoji: chosenEmoji, score: totalScore});
-  ranking.sort((a,b)=>b.score-a.score);
-  if(ranking.length>10) ranking = ranking.slice(0,10);
+function endGame() {
+  document.getElementById('game-screen').classList.add('hidden');
+  document.getElementById('end-screen').classList.remove('hidden');
+  document.getElementById('final-score').textContent = score;
+  confetti();
+  ranking.push({ name: username, avatar: avatar, score: score });
+  ranking.sort((a,b) => b.score - a.score);
+  ranking = ranking.slice(0,10);
   localStorage.setItem('ranking', JSON.stringify(ranking));
-  renderRanking();
-  const rankPosition = ranking.findIndex(r=>r.name===playerName && r.score===totalScore && r.emoji===chosenEmoji)+1;
-  document.getElementById('ranking-position').textContent = t('your_rank', {pos: rankPosition});
+  showRanking();
 }
 
-function renderRanking(){
-  const ranking = JSON.parse(localStorage.getItem('ranking')||"[]");
-  rankingList.innerHTML = "";
-  ranking.forEach((entry,i)=>{
-    const li = document.createElement('li');
-    li.className = "flex items-center gap-2";
-    const medal = i===0?"🥇":i===1?"🥈":i===2?"🥉":"";
-    li.innerHTML = `
-      <span class="text-lg">${entry.emoji}</span>
-      <span class="w-6 text-center">${medal}</span>
-      <span class="flex-1 truncate">${entry.name}</span>
-      <span class="font-bold text-emerald-600">${entry.score}</span>`;
-    rankingList.appendChild(li);
+function showRanking() {
+  let html = `<table class="mx-auto text-sm"><tr><th>${translations[currentLang].rankPos}</th><th>${translations[currentLang].rankAvatar}</th><th>${translations[currentLang].rankName}</th><th>${translations[currentLang].rankPoints}</th></tr>`;
+  ranking.forEach((p,i) => {
+    let medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':'';
+    html += `<tr>
+      <td class="medal-cell">${medal || i+1}</td>
+      <td class="avatar-cell">${p.avatar}</td>
+      <td>${p.name}</td>
+      <td>${p.score}</td>
+    </tr>`;
   });
+  html += '</table>';
+  document.getElementById('ranking').innerHTML = html;
 }
 
-/* ==== Eventos de UI ==== */
-document.getElementById('answer-form').onsubmit = e=>{ e.preventDefault(); checkAnswer(); };
-
-document.getElementById('start-btn').onclick = ()=>{
-  const name = document.getElementById('player-name').value.trim();
-  if(!name || !chosenEmoji){ alert(t('need_name_icon')); return; }
-  playerName = name;
-  totalScore = 0; questionsDone = 0;
-  document.getElementById('total-score').textContent = totalScore;
-  document.getElementById('question-number').textContent = 1;
-  startSection.classList.add('hidden');
-  gameSection.classList.remove('hidden');
-  newProblem();
-};
-
-document.getElementById('restart-btn').onclick = ()=>{
-  totalScore = 0; questionsDone = 0;
-  document.getElementById('total-score').textContent = totalScore;
-  document.getElementById('question-number').textContent = 1;
-  finalSection.classList.add('hidden');
-  gameSection.classList.remove('hidden');
-  newProblem();
-};
-
-document.getElementById('new-player-btn').onclick = ()=>{
-  finalSection.classList.add('hidden');
-  startSection.classList.remove('hidden');
-};
-
-document.getElementById('reset-ranking-btn').onclick = ()=>{
-  const pass = prompt(t('admin_prompt'));
-  if(pass === "admin123"){
-    localStorage.removeItem('ranking');
-    renderRanking();
-    alert(t('admin_ok'));
-  } else {
-    alert(t('admin_bad'));
-  }
-};
-
-/* ==== Selección de idioma inicial ==== */
-document.querySelectorAll('[data-choose-lang]').forEach(btn=>{
-  btn.addEventListener('click', ()=>{
-    LANG = btn.getAttribute('data-choose-lang');
-    localStorage.setItem('lang', LANG);
-    applyTranslations();
-    langSection.classList.add('hidden');
-    startSection.classList.remove('hidden');
-  });
+document.getElementById('restart-btn').addEventListener('click', () => {
+  score = 0;
+  questionCount = 0;
+  document.getElementById('end-screen').classList.add('hidden');
+  document.getElementById('game-screen').classList.remove('hidden');
+  nextQuestion();
 });
 
-/* ==== Cambiar idioma desde las banderas fijas ==== */
-document.querySelectorAll('[data-lang]').forEach(btn=>{
-  btn.addEventListener('click', ()=>{
-    LANG = btn.getAttribute('data-lang');
-    localStorage.setItem('lang', LANG);
-    applyTranslations();
-  });
+document.getElementById('new-player-btn').addEventListener('click', () => {
+  document.getElementById('end-screen').classList.add('hidden');
+  document.getElementById('start-screen').classList.remove('hidden');
 });
-
-/* ==== Init ==== */
-(function init(){
-  // Si ya hay idioma guardado, salta selección de idioma
-  if (localStorage.getItem('lang')) {
-    langSection.classList.add('hidden');
-    startSection.classList.remove('hidden');
-  } else {
-    langSection.classList.remove('hidden');
-    startSection.classList.add('hidden');
-  }
-  applyTranslations();
-  renderIcons();
-  renderRanking();
-})();
 </script>
 </body>
 </html>
